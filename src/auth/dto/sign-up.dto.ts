@@ -3,9 +3,7 @@ import { ApiPropertyOptional } from "@nestjs/swagger";
 import { Transform, Type } from "class-transformer";
 import { IsDate, IsDateString, IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, MinLength } from "class-validator";
 
-
-
-export class CreateUserDto {
+export class SignUpDto {
 
     @IsEmail()
     email: string;
@@ -37,7 +35,6 @@ export class CreateUserDto {
     @Transform(({ value }) => value ? new Date(value) : undefined)
     @IsDate()
     dateOfBirth?: Date;
-
 
 
     @IsOptional()
