@@ -2,15 +2,26 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { PrismaModule } from '../prisma/prisma.module';
+import { PrismaService } from '../prisma/prisma.service';
 
 describe('UsersService', () => {
   let service: UsersService;
+
+  const mockPrismaService = {
+    user: {
+      create: jest.fn().mockImplementation((dto) =>
+        Promise.resolve({ id: 1, ...dto }),
+      ),
+    },
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [PrismaModule],
 
-      providers: [UsersService],
+      providers: [UsersService,
+        { provide: PrismaService, useValue: mockPrismaService }
+      ],
     }).compile();
 
     service = module.get<UsersService>(UsersService);
@@ -24,5 +35,8 @@ describe('UsersService', () => {
     const createUserDto: CreateUserDto = { fullName: 'test user', username: 'test', email: 'test@test.com', password: '123456' };
     const user = await service.create(createUserDto);
     expect(user).toHaveProperty('id');
+    expect(mockPrismaService.user.create).toHaveBeenCalledWith({
+      data: createUserDto,
+    });
   })
 });
