@@ -12,6 +12,11 @@ describe('UsersService', () => {
       create: jest.fn().mockImplementation((dto) =>
         Promise.resolve({ id: 1, ...dto }),
       ),
+      findFirst: jest.fn().mockResolvedValue(null),
+
+      //jess.fn(): create mock function
+      //mockImplement: simulate the function behavior
+      //mockResolvedValue: simulate the return value of an async function
     },
   };
 
@@ -35,8 +40,17 @@ describe('UsersService', () => {
     const createUserDto: CreateUserDto = { fullName: 'test user', username: 'test', email: 'test@test.com', password: '123456' };
     const user = await service.create(createUserDto);
     expect(user).toHaveProperty('id');
-    expect(mockPrismaService.user.create).toHaveBeenCalledWith({
-      data: createUserDto,
-    });
+
+    expect(mockPrismaService.user.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          email: 'test@test.com',
+          username: 'test',
+          fullName: 'test user',
+          password: expect.any(String), // ✅ chỉ cần là string (hash)
+        }),
+      }),
+    );
+
   })
 });
