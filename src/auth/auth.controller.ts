@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, Logger } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignUpDto } from './dto/sign-up.dto';
 import { LoginDto } from './dto/login.dto';
@@ -6,16 +6,30 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ForgetPasswordDto } from './dto/forget-password.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { LogoutDto } from './dto/logout.dto';
+import { CreateUserDto } from 'src/users/dto/create-user.dto';
+import { UsersService } from 'src/users/users.service';
+
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) { }
+
+  private readonly logger = new Logger(AuthController.name);
+
+  constructor(
+    private readonly authService: AuthService,
+    private readonly usersService: UsersService
+  ) { }
 
   @Post('sign-up')
   async signUp(@Body() signUpDto: SignUpDto) {
-    return {
-      userId: '9d32-fake-id-1234-5678-abcdef'
-    };
+    this.logger.log(`POST /sign-up - Sign up request for email: ${signUpDto.email}`);
+    const createUserDto: CreateUserDto = {
+      fullName: signUpDto.fullName,
+      username: signUpDto.username,
+      email: signUpDto.email,
+      password: signUpDto.password,
+    }
+    return this.usersService.create(createUserDto);
   }
 
   @Post('login')
