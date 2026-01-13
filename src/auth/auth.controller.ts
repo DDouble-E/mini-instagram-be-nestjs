@@ -34,6 +34,7 @@ export class AuthController {
 
   @Post('login')
   async login(@Body() loginDto: LoginDto) {
+    this.logger.log(`POST /login - Login request for identifier: ${loginDto.identifier}`);
     return {
       userId: '9d32-fake-id-1234-5678-abcdef',
       username: 'testuser',
