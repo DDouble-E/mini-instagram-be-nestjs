@@ -23,7 +23,7 @@ export class JwtRefreshStrategy extends PassportStrategy(
 
         const refreshToken = authHeader.replace('Bearer', '').trim();
         return {
-            ...payload,
+            userId: payload.sub,
             refreshToken, // Trả về payload giải mã + chuỗi token gốc để so sánh
         };
     }

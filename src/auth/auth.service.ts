@@ -20,12 +20,12 @@ export class AuthService {
         const payload = { sub: userId };
 
         const accessToken = this.jwtService.sign(payload, {
-            secret: this.configService.get('JWT_ACCESS_SECRET'),
+            secret: this.configService.get('JWT_ACCESS_SECRET_KEY'),
             expiresIn: this.configService.get('JWT_ACCESS_EXPIRES_MINS'),
         });
 
         const refreshToken = this.jwtService.sign(payload, {
-            secret: this.configService.get('JWT_REFRESH_SECRET'),
+            secret: this.configService.get('JWT_REFRESH_SECRET_KEY'),
             expiresIn: this.configService.get('JWT_REFRESH_EXPIRES_DAYS'),
         });
 
@@ -33,14 +33,27 @@ export class AuthService {
     }
 
     async login(loginDto: LoginDto) {
+        this.logger.log(`Login attempt for identifier: ${loginDto.identifier}`);
         const existingUser = await this.usersService.findByEmailOrUsername(
             loginDto.identifier,
             loginDto.identifier
         );
 
+
         if (!existingUser) {
             throw new BadRequestException('Email/username or password is incorrect');
         }
+
+
+        const tokens = await this.generateTokens(existingUser.id);
+
+        this.logger.log('Authentication successful, tokens generated');
+
+        return {
+            userId: existingUser.id,
+            username: existingUser.username,
+            ...tokens
+        };
 
 
     }

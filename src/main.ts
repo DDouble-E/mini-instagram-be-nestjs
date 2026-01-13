@@ -5,7 +5,6 @@ import { TransformResponseInterceptor } from './common/interceptors/transform-re
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { ValidationPipe } from '@nestjs/common';
 import { HttpLoggingInterceptor } from './common/interceptors/http-logging.interceptor';
-import { AllExceptionFilter } from './common/filters/all-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -23,6 +22,7 @@ async function bootstrap() {
     .setTitle('NestJS API')
     .setDescription('Tài liệu API cho dự án training')
     .setVersion('1.0')
+    .addSecurityRequirements('bearer') // <--- Dòng này giúp mọi API đều hiện nút khóa mặc định
     .addBearerAuth() // Thêm nút "Authorize" để nhập Token
     .build();
 
@@ -35,7 +35,6 @@ async function bootstrap() {
   );
 
   app.useGlobalFilters(
-    new AllExceptionFilter(),             // 🔥 log exception error
     new HttpExceptionFilter(),            // format error response
   );
 

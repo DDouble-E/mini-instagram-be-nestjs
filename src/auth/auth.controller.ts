@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Logger } from '@nestjs/common';
+import { Body, Controller, Post, Logger, UseGuards, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignUpDto } from './dto/sign-up.dto';
 import { LoginDto } from './dto/login.dto';
@@ -8,6 +8,9 @@ import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { LogoutDto } from './dto/logout.dto';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { UsersService } from 'src/users/users.service';
+import { Public } from './decorators/public.decorator';
+import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
+import { GetUser } from './decorators/get-user.decorator';
 
 
 @Controller('auth')
@@ -20,6 +23,7 @@ export class AuthController {
     private readonly usersService: UsersService
   ) { }
 
+  @Public()
   @Post('sign-up')
   async signUp(@Body() signUpDto: SignUpDto) {
     this.logger.log(`POST /sign-up - Sign up request for email: ${signUpDto.email}`);
@@ -32,15 +36,11 @@ export class AuthController {
     return this.usersService.create(createUserDto);
   }
 
+  @Public()
   @Post('login')
   async login(@Body() loginDto: LoginDto) {
     this.logger.log(`POST /login - Login request for identifier: ${loginDto.identifier}`);
-    return {
-      userId: '9d32-fake-id-1234-5678-abcdef',
-      username: 'testuser',
-      accessToken: 'fake-jwt-token-1234567890',
-      refreshToken: 'fake-refresh-token-0987654321',
-    };
+    return this.authService.login(loginDto);
   }
 
 
@@ -55,12 +55,13 @@ export class AuthController {
     return 'Password has been successfully reset';
   }
 
+  @Public()
   @Post('refresh-token')
-  async refreshToken(@Body() refreshTokenDto: RefreshTokenDto) {
-    const { refreshToken } = refreshTokenDto;
-    return {
-      accessToken: 'new-fake-jwt-token-1234567890',
-    };
+  @UseGuards(JwtRefreshGuard)
+  async refreshToken(@GetUser() user: any) {
+    const { refreshToken } = user;
+    this.logger.debug(`POST /refresh-token - Refresh token request for user ID: ${JSON.stringify(user)}`);
+    return this.authService.generateTokens(user.userId)
   }
 
   @Post('logout')

@@ -16,9 +16,9 @@ import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
-        secret: config.get<string>('JWT_SECRET_KEY', 'default'),
+        secret: config.get<string>('JWT_ACCESS_SECRET_KEY'),
         signOptions: {
-          expiresIn: config.get<string>('JWT_EXPIRES', '60m') as StringValue,
+          expiresIn: config.get<string>('JWT_ACCESS_EXPIRES_MINS') as StringValue,
         },
       })
     }),
