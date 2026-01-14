@@ -6,6 +6,9 @@ import { ConfigService } from '@nestjs/config';
 import { MailerService } from '@nestjs-modules/mailer/dist/mailer.service';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import * as bcrypt from 'bcrypt';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { TokensRepository } from './tokens.repository';
+import { TokenService } from './token.service';
 
 
 @Injectable()
@@ -14,40 +17,13 @@ export class AuthService {
     private readonly logger = new Logger(AuthService.name);
 
     constructor(
+        private readonly prismaService: PrismaService,
         private readonly usersService: UsersService,
-        private jwtService: JwtService,
-        private configService: ConfigService,
         private readonly mailerService: MailerService,
+        private readonly tokenService: TokenService,
     ) { }
 
-    async generateTokens(userId: string) {
-        this.logger.log(`Generating tokens for user ID: ${userId}`);
-        const payload = { sub: userId };
 
-        const accessToken = this.jwtService.sign(payload, {
-            secret: this.configService.get('JWT_ACCESS_SECRET_KEY'),
-            expiresIn: this.configService.get('JWT_ACCESS_EXPIRES_MINS'),
-        });
-
-        const refreshToken = this.jwtService.sign(payload, {
-            secret: this.configService.get('JWT_REFRESH_SECRET_KEY'),
-            expiresIn: this.configService.get('JWT_REFRESH_EXPIRES_DAYS'),
-        });
-
-        return { accessToken, refreshToken };
-    }
-
-    async decodeResetPasswordToken(token: string) {
-        this.logger.log('Decoding reset password token');
-        try {
-            const decoded = this.jwtService.verify(token, {
-                secret: this.configService.get('JWT_RESET_PASSWORD_SECRET_KEY'),
-            });
-            return decoded;
-        } catch (error) {
-            throw new BadRequestException('Invalid reset password token');
-        }
-    }
 
     async login(loginDto: LoginDto) {
         this.logger.log(`Login attempt for identifier: ${loginDto.identifier}`);
@@ -61,7 +37,7 @@ export class AuthService {
             throw new UnauthorizedException('Email/username or password is incorrect');
         }
 
-        const tokens = await this.generateTokens(existingUser.id);
+        const tokens = await this.tokenService.generateTokens(existingUser.id);
 
         this.logger.log('Authentication successful, tokens generated');
 
@@ -74,6 +50,34 @@ export class AuthService {
 
     }
 
+
+    async refreshToken(refreshToken: string, userId: string) {
+        this.logger.log('Refreshing tokens');
+
+        const validToken = await this.prismaService.refreshToken.findUnique({
+            where: {
+                token: refreshToken,
+                revoked: false,
+                expiresAt: { gt: new Date() },
+                userId: userId
+            }
+        });
+
+        if (!validToken) {
+            this.logger.warn('Refresh token not found in database');
+            throw new BadRequestException('Invalid refresh token');
+        }
+
+        await this.prismaService.refreshToken.update({
+            where: { id: validToken.id },
+            data: { revoked: true }
+        });
+        this.logger.log('Old refresh token revoked');
+
+        const tokens = await this.tokenService.generateTokens(userId);
+        return tokens;
+    }
+
     async forgetPassword(identifier: string) {
         this.logger.log(`Processing forget password for identifier: ${identifier}`);
         const existingUser = await this.usersService.findByEmailOrUsername(
@@ -84,10 +88,9 @@ export class AuthService {
         if (!existingUser) {
             throw new NotFoundException('Email/username not found');
         }
-        const token = this.jwtService.sign({ email: existingUser.email, username: existingUser.username }, {
-            secret: this.configService.get('JWT_RESET_PASSWORD_SECRET_KEY'),
-            expiresIn: this.configService.get('JWT_RESET_PASSWORD_EXPIRES_MINS'),
-        });
+
+        const token = await this.tokenService.generateResetPasswordToken(existingUser.id, existingUser.email, existingUser.username);
+
         await this.sendResetPasswordEmail(existingUser.email, existingUser.username, token);
         this.logger.log('Reset password email sent successfully');
         return;
@@ -97,7 +100,7 @@ export class AuthService {
         this.logger.log('Processing password reset');
         const { token, newPassword, confirmNewPassword } = resetPasswordDto;
 
-        const decoded = await this.decodeResetPasswordToken(token);
+        const decoded = await this.tokenService.decodeResetPasswordToken(token);
 
         const username = decoded.username;
         if (newPassword !== confirmNewPassword) {

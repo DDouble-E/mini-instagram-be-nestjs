@@ -12,9 +12,13 @@ import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { join } from 'path/win32';
 import { MailerModule } from '@nestjs-modules/mailer/dist/mailer.module';
+import { PrismaModule } from 'src/prisma/prisma.module';
+import { TokensRepository } from './tokens.repository';
+import { TokenService } from './token.service';
 
 @Module({
   imports: [
+    PrismaModule,
     MailerModule.forRoot({
       transport: {
         host: process.env.SMTP_HOST,
@@ -45,7 +49,7 @@ import { MailerModule } from '@nestjs-modules/mailer/dist/mailer.module';
       useFactory: (config: ConfigService) => ({
         secret: config.get<string>('JWT_ACCESS_SECRET_KEY'),
         signOptions: {
-          expiresIn: config.get<string>('JWT_ACCESS_EXPIRES_MINS') as StringValue,
+          expiresIn: config.get('JWT_ACCESS_EXPIRES_MINS') * 60, // convert mins to seconds
         },
       })
     }),
@@ -54,6 +58,8 @@ import { MailerModule } from '@nestjs-modules/mailer/dist/mailer.module';
   providers: [AuthService,
     JwtAccessStrategy,
     JwtRefreshStrategy,
+    TokensRepository,
+    TokenService,
     {
       provide: APP_GUARD,
       useClass: JwtAccessGuard

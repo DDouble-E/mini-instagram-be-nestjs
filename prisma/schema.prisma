@@ -25,6 +25,46 @@ model User {
   gender      String?
   phoneNumber String?
 
+  refreshTokens RefreshToken[]
+  passwordResets PasswordReset[]
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+// 1. Quản lý Refresh Token (Duy trì đăng nhập)
+model RefreshToken {
+  id         String   @id @default(uuid()) @db.Uuid
+  token      String   @unique @db.Text // Lưu nguyên chuỗi token dài
+  userId     String   @db.Uuid
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  revoked    Boolean  @default(false)  
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+
+  @@index([token]) // Tăng tốc độ tìm kiếm token
+}
+
+// 2. Quản lý Reset Password Token (Quên mật khẩu)
+model PasswordReset {
+  id         String   @id @default(uuid()) @db.Uuid
+  token      String   @unique @db.Text
+  email      String
+  userId     String   @db.Uuid
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+
+  @@index([token])
+}
+
+// 3. Quản lý Blacklist cho Access Token (Khi Logout)
+model TokenBlacklist {
+  id         String   @id @default(uuid()) @db.Uuid
+  token      String   @unique @db.Text // Lưu nguyên chuỗi Access Token bị chặn
+  expiresAt  DateTime // Thời điểm mà token này thực sự hết hạn (để xóa rác sau này)
+  createdAt  DateTime @default(now())
+
+  @@index([token])
+}
+
