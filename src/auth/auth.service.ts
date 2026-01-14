@@ -1,9 +1,12 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { LoginDto } from './dto/login.dto';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { MailerService } from '@nestjs-modules/mailer/dist/mailer.service';
+import { ResetPasswordDto } from './dto/reset-password.dto';
+import * as bcrypt from 'bcrypt';
+
 
 @Injectable()
 export class AuthService {
@@ -34,6 +37,18 @@ export class AuthService {
         return { accessToken, refreshToken };
     }
 
+    async decodeResetPasswordToken(token: string) {
+        this.logger.log('Decoding reset password token');
+        try {
+            const decoded = this.jwtService.verify(token, {
+                secret: this.configService.get('JWT_RESET_PASSWORD_SECRET_KEY'),
+            });
+            return decoded;
+        } catch (error) {
+            throw new BadRequestException('Invalid reset password token');
+        }
+    }
+
     async login(loginDto: LoginDto) {
         this.logger.log(`Login attempt for identifier: ${loginDto.identifier}`);
         const existingUser = await this.usersService.findByEmailOrUsername(
@@ -42,10 +57,9 @@ export class AuthService {
         );
 
 
-        if (!existingUser) {
-            throw new BadRequestException('Email/username or password is incorrect');
+        if (!existingUser || !await bcrypt.compare(loginDto.password, existingUser.password)) {
+            throw new UnauthorizedException('Email/username or password is incorrect');
         }
-
 
         const tokens = await this.generateTokens(existingUser.id);
 
@@ -68,7 +82,7 @@ export class AuthService {
         );
 
         if (!existingUser) {
-            throw new BadRequestException('Email/username not found');
+            throw new NotFoundException('Email/username not found');
         }
         const token = this.jwtService.sign({ email: existingUser.email, username: existingUser.username }, {
             secret: this.configService.get('JWT_RESET_PASSWORD_SECRET_KEY'),
@@ -76,6 +90,22 @@ export class AuthService {
         });
         await this.sendResetPasswordEmail(existingUser.email, existingUser.username, token);
         this.logger.log('Reset password email sent successfully');
+        return;
+    }
+
+    async resetPassword(resetPasswordDto: ResetPasswordDto) {
+        this.logger.log('Processing password reset');
+        const { token, newPassword, confirmNewPassword } = resetPasswordDto;
+
+        const decoded = await this.decodeResetPasswordToken(token);
+
+        const username = decoded.username;
+        if (newPassword !== confirmNewPassword) {
+            throw new BadRequestException('New password and confirm new password do not match');
+        }
+
+        await this.usersService.changePassword(username, newPassword);
+        this.logger.log(`Password reset successfully for username: ${username}`);
         return;
     }
 

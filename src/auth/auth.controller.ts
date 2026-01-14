@@ -47,12 +47,15 @@ export class AuthController {
   @Post('forget-password')
   async forgetPassword(@Body() forgetPasswordDto: ForgetPasswordDto) {
     const { identifier } = forgetPasswordDto;
+    this.logger.log(`POST /forget-password - Forget password request for identifier: ${identifier}`);
     await this.authService.forgetPassword(identifier);
     return 'Reset password link has been sent to your email';
   }
 
   @Post('reset-password')
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
+    this.logger.log('POST /reset-password - Reset password request received');
+    await this.authService.resetPassword(resetPasswordDto);
     return 'Password has been successfully reset';
   }
 

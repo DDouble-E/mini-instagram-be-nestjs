@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
@@ -17,7 +17,7 @@ export class UsersService {
 
         if (existingUser) {
             this.logger.warn(`User with email ${userData.email} or username ${userData.username} already exists`);
-            throw new BadRequestException(
+            throw new ConflictException(
                 'User with this email or username already exists',
             );
         }
@@ -35,7 +35,29 @@ export class UsersService {
         return newUser;
     }
 
+    async changePassword(username: string, newPassword: string) {
+        this.logger.log(`Changing password for username: ${username}`);
+
+        const existingUser = await this.prisma.user.findUnique({
+            where: { username: username }
+        });
+
+        if (!existingUser) {
+            this.logger.warn(`User with username ${username} not found`);
+            throw new NotFoundException('User not found');
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        await this.prisma.user.update({
+            where: { username: username },
+            data: { password: hashedPassword }
+        });
+        this.logger.log(`Password changed successfully for username: ${username}`);
+    }
+
     async findByEmailOrUsername(email: string, username: string) {
+        this.logger.log(`Finding user by email: ${email} or username: ${username}`);
         return this.prisma.user.findFirst({
             where: {
                 OR: [
