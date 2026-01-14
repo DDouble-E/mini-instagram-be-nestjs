@@ -57,9 +57,10 @@ describe('AuthService (Integration Test - Real Email)', () => {
   it('should SEND a real email to Gmail', async () => {
     const email = 'nchihuy099@gmail.com'; // Email nhận thật
     const username = 'nchihuy099';
+    const token = 'mock_token_string_123456';
 
     // Nếu hàm này chạy không lỗi, mail sẽ được gửi thật
-    await expect(service.sendResetPasswordEmail(email, username))
+    await expect(service.sendResetPasswordEmail(email, username, token))
       .resolves.not.toThrow();
 
     console.log('Kiểm tra hòm thư của bạn ngay!');

@@ -47,6 +47,7 @@ export class AuthController {
   @Post('forget-password')
   async forgetPassword(@Body() forgetPasswordDto: ForgetPasswordDto) {
     const { identifier } = forgetPasswordDto;
+    await this.authService.forgetPassword(identifier);
     return 'Reset password link has been sent to your email';
   }
 

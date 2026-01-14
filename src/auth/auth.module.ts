@@ -24,19 +24,20 @@ import { MailerModule } from '@nestjs-modules/mailer/dist/mailer.module';
           user: process.env.EMAIL_USER,
           pass: process.env.EMAIL_PASSWORD,
         },
-        // Cấu hình mặc định
-        defaults: {
-          from: '"No Reply" <noreply@example.com>',
-        },
-        // Cấu hình Template (Handlebars)
-        template: {
-          dir: join(__dirname, '..', 'mail'),
-          adapter: new HandlebarsAdapter(),
-          options: {
-            strict: true,
-          },
+      },
+      // Cấu hình mặc định
+      defaults: {
+        from: '"No Reply" <noreply@example.com>',
+      },
+      // Cấu hình Template (Handlebars)
+      template: {
+        dir: join(__dirname, '..', 'mail'),
+        adapter: new HandlebarsAdapter(),
+        options: {
+          strict: true,
         },
       },
+
     }),
     UsersModule,
     JwtModule.registerAsync({

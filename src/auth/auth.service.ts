@@ -60,12 +60,28 @@ export class AuthService {
 
     }
 
-    async sendResetPasswordEmail(email: string, username: string) {
-        const token = this.jwtService.sign({ email, username }, {
+    async forgetPassword(identifier: string) {
+        this.logger.log(`Processing forget password for identifier: ${identifier}`);
+        const existingUser = await this.usersService.findByEmailOrUsername(
+            identifier,
+            identifier
+        );
+
+        if (!existingUser) {
+            throw new BadRequestException('Email/username not found');
+        }
+        const token = this.jwtService.sign({ email: existingUser.email, username: existingUser.username }, {
             secret: this.configService.get('JWT_RESET_PASSWORD_SECRET_KEY'),
             expiresIn: this.configService.get('JWT_RESET_PASSWORD_EXPIRES_MINS'),
         });
-        this.logger.log(`Sending reset password email to: ${email} with token: ${token}`);
+        await this.sendResetPasswordEmail(existingUser.email, existingUser.username, token);
+        this.logger.log('Reset password email sent successfully');
+        return;
+    }
+
+    async sendResetPasswordEmail(email: string, username: string, token: string) {
+
+        this.logger.log(`Sending reset password email to: ${email}`);
         await this.mailerService.sendMail({
             to: email,
             // from: 'Override Email <override@example.com>', // Có thể override default
