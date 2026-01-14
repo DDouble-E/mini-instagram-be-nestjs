@@ -8,6 +8,7 @@ import { ConfigModule } from '@nestjs/config';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { join } from 'path';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
+import { S3Module } from './s3/s3.module';
 
 @Module({
   imports: [
@@ -16,7 +17,8 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
     PrismaModule,
     ConfigModule.forRoot({
       isGlobal: true,
-    })
+    }),
+    S3Module
   ],
   controllers: [AppController],
   providers: [AppService],
