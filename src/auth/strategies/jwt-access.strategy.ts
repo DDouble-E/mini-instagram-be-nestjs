@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { ForbiddenException, Injectable } from "@nestjs/common";
 import { PassportStrategy } from "@nestjs/passport";
 import { ExtractJwt, Strategy } from "passport-jwt";
 
@@ -10,14 +10,21 @@ export class JwtAccessStrategy extends PassportStrategy(Strategy, 'jwt-access') 
         super({
             jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
             ignoreExpiration: false,
-            secretOrKey: process.env.JWT_ACCESS_TOKEN_SECRET || 'default',
+            secretOrKey: process.env.JWT_ACCESS_SECRET_KEY || 'default',
+            passReqToCallback: true,
         });
     }
 
-    async validate(payload: any) {
+    validate(req: Request, payload: any) {
+        const authHeader = req.headers['authorization'];
+
+        if (!authHeader) throw new ForbiddenException('Access token missing');
+
+        const accessToken = authHeader.replace('Bearer', '').trim();
         return {
-            userId: payload.userId
+            userId: payload.sub,
+            exp: payload.exp,
+            accessToken
         };
     }
-
 }

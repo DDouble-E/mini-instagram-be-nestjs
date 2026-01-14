@@ -21,6 +21,7 @@ export class AuthService {
         private readonly usersService: UsersService,
         private readonly mailerService: MailerService,
         private readonly tokenService: TokenService,
+        private readonly configService: ConfigService,
     ) { }
 
 
@@ -54,28 +55,21 @@ export class AuthService {
     async refreshToken(refreshToken: string, userId: string) {
         this.logger.log('Refreshing tokens');
 
-        const validToken = await this.prismaService.refreshToken.findUnique({
-            where: {
-                token: refreshToken,
-                revoked: false,
-                expiresAt: { gt: new Date() },
-                userId: userId
-            }
-        });
-
-        if (!validToken) {
-            this.logger.warn('Refresh token not found in database');
-            throw new BadRequestException('Invalid refresh token');
-        }
-
-        await this.prismaService.refreshToken.update({
-            where: { id: validToken.id },
-            data: { revoked: true }
-        });
-        this.logger.log('Old refresh token revoked');
+        await this.tokenService.revokeRefreshToken(refreshToken, userId);
 
         const tokens = await this.tokenService.generateTokens(userId);
+
         return tokens;
+    }
+
+    async logout(accessToken: string, refreshToken: string, userId: string, expUnix: number) {
+        this.logger.log('Logging out user');
+
+        await this.tokenService.revokeRefreshToken(refreshToken, userId);
+
+        const expiryDate = new Date(expUnix * 1000);
+        await this.tokenService.blacklistToken(accessToken, expiryDate);
+        return;
     }
 
     async forgetPassword(identifier: string) {

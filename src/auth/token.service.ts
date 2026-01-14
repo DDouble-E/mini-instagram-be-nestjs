@@ -13,6 +13,7 @@ export class TokenService {
         private readonly configService: ConfigService,
         private readonly tokensRepository: TokensRepository,
         private readonly jwtService: JwtService,
+        private readonly prismaService: PrismaService,
     ) { }
 
 
@@ -61,6 +62,47 @@ export class TokenService {
         } catch (error) {
             throw new BadRequestException('Invalid reset password token');
         }
+    }
+
+    async revokeRefreshToken(token: string, userId: string) {
+        this.logger.log(`Revoking refresh token for user ID: ${userId}`);
+        const record = await this.prismaService.refreshToken.findFirst({
+            where: {
+                token: token,
+                userId: userId,
+                revoked: false
+            }
+        });
+
+        if (!record) {
+            this.logger.warn('Refresh token not found or already revoked');
+            return;
+        }
+
+        await this.prismaService.refreshToken.update({
+            where: { id: record.id },
+            data: { revoked: true }
+        });
+    }
+
+    async blacklistToken(token: string, expiresAt: Date) {
+        this.logger.log('Blacklisting token');
+
+        const existing = await this.prismaService.tokenBlacklist.findFirst({
+            where: { token: token }
+        });
+
+        if (existing) {
+            this.logger.warn('Token is already blacklisted');
+            return;
+        }
+
+        await this.prismaService.tokenBlacklist.create({
+            data: {
+                token: token,
+                expiresAt: expiresAt
+            }
+        });
     }
 }
 

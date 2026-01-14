@@ -1,4 +1,4 @@
-import { ExecutionContext, Injectable, Logger } from "@nestjs/common";
+import { ExecutionContext, Injectable, Logger, UnauthorizedException } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { AuthGuard } from "@nestjs/passport";
 import { IS_PUBLIC_KEY } from "../decorators/public.decorator";
@@ -39,5 +39,16 @@ export class JwtAccessGuard extends AuthGuard('jwt-access') {
         }
 
         return super.canActivate(context);
+    }
+
+    handleRequest(err, user, info) {
+        if (info) {
+            this.logger.log('--- CHI TIẾT LỖI Access GUARD ---');
+            this.logger.log(info.message); // Nó sẽ hiện: "jwt expired" hoặc "invalid signature" hoặc "No auth token"
+        }
+        if (err || !user) {
+            throw err || new UnauthorizedException();
+        }
+        return user;
     }
 }

@@ -69,8 +69,11 @@ export class AuthController {
   }
 
   @Post('logout')
-  async logout(@Body() logoutDto: LogoutDto) {
+  async logout(@Body() logoutDto: LogoutDto, @Req() req: any) {
     const { refreshToken } = logoutDto;
+    const { userId, accessToken, exp } = req.user;
+    this.logger.debug(`POST /logout - Logout request for user ID: ${JSON.stringify(req.user)}`);
+    await this.authService.logout(accessToken, refreshToken, userId, exp);
     return 'Successfully logged out';
   }
 }
