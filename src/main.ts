@@ -5,6 +5,7 @@ import { TransformResponseInterceptor } from './common/interceptors/transform-re
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { ValidationPipe } from '@nestjs/common';
 import { HttpLoggingInterceptor } from './common/interceptors/http-logging.interceptor';
+import { join } from 'path';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -21,6 +22,8 @@ async function bootstrap() {
       transform: true, // <--- ĐÂY LÀ DÒNG QUAN TRỌNG NHẤT
     }),
   );
+  console.log('TEMPLATE DIR:', join(process.cwd(), 'dist', 'mail'));
+
 
   // 2. Cấu hình Swagger
   const config = new DocumentBuilder()

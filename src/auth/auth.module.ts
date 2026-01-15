@@ -10,7 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import { StringValue } from 'ms';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
-import { join } from 'path/win32';
+import { join } from 'path';
 import { MailerModule } from '@nestjs-modules/mailer/dist/mailer.module';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { TokensRepository } from './tokens.repository';
@@ -35,7 +35,7 @@ import { TokenService } from './token.service';
       },
       // Cấu hình Template (Handlebars)
       template: {
-        dir: join(__dirname, '..', 'mail'),
+        dir: join(process.cwd(), 'dist', 'mail'),
         adapter: new HandlebarsAdapter(),
         options: {
           strict: true,
