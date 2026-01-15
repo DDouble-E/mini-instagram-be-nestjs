@@ -21,9 +21,10 @@ import { TokenService } from './token.service';
     PrismaModule,
     MailerModule.forRoot({
       transport: {
-        host: process.env.SMTP_HOST,
-        port: process.env.SMTP_PORT,
-        secure: process.env.SMTP_SECURE, // true cho port 465, false cho các port khác
+        service: 'gmail',
+        // host: process.env.SMTP_HOST,
+        // port: process.env.SMTP_PORT,
+        // secure: process.env.SMTP_SECURE, // true cho port 465, false cho các port khác
         auth: {
           user: process.env.EMAIL_USER,
           pass: process.env.EMAIL_PASSWORD,
@@ -31,7 +32,7 @@ import { TokenService } from './token.service';
       },
       // Cấu hình mặc định
       defaults: {
-        from: '"No Reply" <noreply@example.com>',
+        from: '"No Reply" <onboarding@resend.dev>',
       },
       // Cấu hình Template (Handlebars)
       template: {
