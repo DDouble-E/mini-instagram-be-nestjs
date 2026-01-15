@@ -23,7 +23,7 @@ import { TokenService } from './token.service';
       transport: {
         host: process.env.SMTP_HOST,
         port: process.env.SMTP_PORT,
-        secure: true, // true cho port 465, false cho các port khác
+        secure: process.env.SMTP_SECURE, // true cho port 465, false cho các port khác
         auth: {
           user: process.env.EMAIL_USER,
           pass: process.env.EMAIL_PASSWORD,
