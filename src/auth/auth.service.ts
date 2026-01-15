@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { LoginDto } from './dto/login.dto';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
@@ -9,20 +9,27 @@ import * as bcrypt from 'bcrypt';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { TokensRepository } from './tokens.repository';
 import { TokenService } from './token.service';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
 
 
 @Injectable()
 export class AuthService {
 
+    private readonly sendResetPassMailApiUrl: string;
+
     private readonly logger = new Logger(AuthService.name);
 
     constructor(
+        private readonly httpService: HttpService,
         private readonly prismaService: PrismaService,
         private readonly usersService: UsersService,
         private readonly mailerService: MailerService,
         private readonly tokenService: TokenService,
         private readonly configService: ConfigService,
-    ) { }
+    ) {
+        this.sendResetPassMailApiUrl = this.configService.getOrThrow('SEND_RESET_PASS_MAIL_API_URL');
+    }
 
 
 
@@ -109,16 +116,59 @@ export class AuthService {
     async sendResetPasswordEmail(email: string, username: string, token: string) {
 
         this.logger.log(`Sending reset password email to: ${email}`);
-        await this.mailerService.sendMail({
-            to: email,
-            // from: 'Override Email <override@example.com>', // Có thể override default
-            subject: '[Mini-Instagram] Đặt lại mật khẩu của bạn',
-            template: './reset_pass', // Tên file template (không cần đuôi .hbs)
-            context: { // Dữ liệu truyền vào template
-                username,
-                resetLink: `${process.env.FRONTEND_URL}/reset-password?token=${token}`,
-                frontendUrl: process.env.FRONTEND_URL
-            },
-        });
+
+        try {
+            const resp = await firstValueFrom(
+                this.httpService.post(
+                    this.sendResetPassMailApiUrl,
+                    {
+                        email,
+                        username,
+                        token,
+                        frontendUrl: this.configService.getOrThrow('FRONTEND_URL'),
+                    },
+                    {
+                        timeout: 5000,
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                    },
+                ),
+            );
+
+            this.logger.log(`Reset password email API response: ${JSON.stringify(resp.data)}`);
+
+            if (resp?.status !== 200 && !resp.data?.success) {
+                this.logger.error(
+                    `Failed to send reset password email. Status: ${resp?.status}, Data: ${JSON.stringify(resp?.data || resp)}`,
+                );
+                throw new InternalServerErrorException(
+                    `Failed to send reset password email: ${JSON.stringify(resp?.data || resp)}`,
+                );
+            }
+        } catch (error) {
+            this.logger.error(
+                `Error sending reset password email: ${error?.response?.data || error?.message || error
+                }`,
+            );
+            throw new InternalServerErrorException(
+                `Failed to send reset password email: ${error?.response?.data || error?.message || error
+                }`,
+            );
+        }
+
+
+
+        // await this.mailerService.sendMail({
+        //     to: email,
+        //     // from: 'Override Email <override@example.com>', // Có thể override default
+        //     subject: '[Mini-Instagram] Đặt lại mật khẩu của bạn',
+        //     template: './reset_pass', // Tên file template (không cần đuôi .hbs)
+        //     context: { // Dữ liệu truyền vào template
+        //         username,
+        //         resetLink: `${process.env.FRONTEND_URL}/reset-password?token=${token}`,
+        //         frontendUrl: process.env.FRONTEND_URL
+        //     },
+        // });
     }
 }

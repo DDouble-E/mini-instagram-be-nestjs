@@ -15,9 +15,12 @@ import { MailerModule } from '@nestjs-modules/mailer/dist/mailer.module';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { TokensRepository } from './tokens.repository';
 import { TokenService } from './token.service';
+import { HttpModule } from '@nestjs/axios';
+
 
 @Module({
   imports: [
+    HttpModule,
     PrismaModule,
     MailerModule.forRoot({
       transport: {
