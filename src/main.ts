@@ -9,6 +9,11 @@ import { HttpLoggingInterceptor } from './common/interceptors/http-logging.inter
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  app.enableCors({
+    origin: 'http://localhost:3000',
+    credentials: true, // nếu có dùng cookie / refresh token
+  });
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true, // Tự động loại bỏ các trường không được định nghĩa trong DTO
