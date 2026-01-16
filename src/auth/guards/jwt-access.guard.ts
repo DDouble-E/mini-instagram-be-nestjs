@@ -13,7 +13,7 @@ export class JwtAccessGuard extends AuthGuard('jwt-access') {
         '/auth/forget-password',
         '/auth/reset-password',
         '/auth/refresh-token',
-
+        '/webhook/image-processed',
         '/',
     ];
 

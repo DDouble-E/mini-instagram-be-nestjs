@@ -6,6 +6,8 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { ValidationPipe } from '@nestjs/common';
 import { HttpLoggingInterceptor } from './common/interceptors/http-logging.interceptor';
 import { join } from 'path';
+import * as bodyParser from 'body-parser';
+
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -45,7 +47,6 @@ async function bootstrap() {
   app.useGlobalFilters(
     new HttpExceptionFilter(),            // format error response
   );
-
 
   await app.listen(process.env.API_PORT ?? 8000);
 }
