@@ -39,7 +39,7 @@ export class WebhookController {
 
         this.logger.log('Verified! Valid signature')
 
-        const { userId, containerId, mediaFileId, images: { url, contentType } } = body;
+        const { userId, containerId, mediaFileId, image: { url, contentType } } = body;
         this.logger.log(`Processing mediaFileId: ${mediaFileId} for userId: ${userId}`);
         await this.prismaService.mediaFile.update({
             where: { id: mediaFileId },
