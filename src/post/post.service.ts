@@ -59,9 +59,11 @@ export class PostService {
             postId: post.id,
             username: post.owner.username,
             caption: post.caption,
-            locationText: post?.locationText,
-            locationLat: post?.locationLat,
-            locationLng: post?.locationLng,
+            location: {
+                text: post?.locationText,
+                lat: post?.locationLat,
+                lng: post?.locationLng,
+            },
             publishedAt: post.updatedAt,
             media: post.mediaContainer.mediaFiles.map(file => ({
                 url: file.url,
@@ -93,9 +95,11 @@ export class PostService {
             postId: post.id,
             username: post.owner.username,
             caption: post.caption,
-            locationText: post?.locationText,
-            locationLat: post?.locationLat,
-            locationLng: post?.locationLng,
+            location: {
+                text: post?.locationText,
+                lat: post?.locationLat,
+                lng: post?.locationLng,
+            },
             publishedAt: post.updatedAt,
             media: post.mediaContainer.mediaFiles.map(file => ({
                 url: file.url,
@@ -126,9 +130,11 @@ export class PostService {
             postId: post.id,
             username: post.owner.username,
             caption: post.caption,
-            locationText: post?.locationText,
-            locationLat: post?.locationLat,
-            locationLng: post?.locationLng,
+            location: {
+                text: post?.locationText,
+                lat: post?.locationLat,
+                lng: post?.locationLng,
+            },
             publishedAt: post.updatedAt,
             media: post.mediaContainer.mediaFiles.map(file => ({
                 url: file.url,
