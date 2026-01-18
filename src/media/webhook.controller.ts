@@ -1,13 +1,15 @@
 import { Controller, Post, Body, Headers, Logger, Req, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Controller('webhook')
 export class WebhookController {
 
     private readonly logger = new Logger(WebhookController.name);
     constructor(
-        private readonly configService: ConfigService
+        private readonly configService: ConfigService,
+        private readonly prismaService: PrismaService,
     ) { }
 
     @Post('image-processed')
@@ -37,10 +39,15 @@ export class WebhookController {
 
         this.logger.log('Verified! Valid signature')
 
-        // Ví dụ xử lý:
-        // - update DB
-        // - gắn ảnh vào post
-        // - đổi status = DONE
+        const { userId, containerId, mediaFileId, images: { original } } = body;
+        this.logger.log(`Processing mediaFileId: ${mediaFileId} for userId: ${userId}`);
+        await this.prismaService.mediaFile.update({
+            where: { id: mediaFileId },
+            data: {
+                url: original.url,
+                status: 'READY',
+            }
+        });
 
         return 'Image Webhook verified and processed';
     }

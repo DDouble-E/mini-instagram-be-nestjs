@@ -14,57 +14,129 @@ datasource db {
 }
 
 model User {
-  id          String  @id @default(uuid()) @db.Uuid
-  email       String  @unique
-  password    String
+  id            String   @id @default(uuid()) @db.Uuid
+  email         String   @unique @map("email")
+  password      String   @map("password")
 
-  username    String  @unique
-  fullName    String
-  biography   String?
-  dateOfBirth DateTime?
-  gender      String?
-  phoneNumber String?
+  username      String   @unique @map("username")
+  fullName      String   @map("full_name")
+  biography     String?  @map("biography")
+  dateOfBirth   DateTime? @map("date_of_birth")
+  gender        String?  @map("gender")
+  phoneNumber   String?  @map("phone_number")
 
-  refreshTokens RefreshToken[]
-  passwordResets PasswordReset[]
+  refreshTokens   RefreshToken[]
+  passwordResets  PasswordReset[]
+  mediaContainers MediaContainer[]
+  posts           Post[]
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
 }
 
-// 1. Quản lý Refresh Token (Duy trì đăng nhập)
 model RefreshToken {
   id         String   @id @default(uuid()) @db.Uuid
-  token      String   @unique @db.Text // Lưu nguyên chuỗi token dài
-  userId     String   @db.Uuid
+  token      String   @unique @db.Text @map("token")
+  userId     String   @db.Uuid @map("user_id")
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  revoked    Boolean  @default(false)  
-  expiresAt  DateTime
-  createdAt  DateTime @default(now())
+  revoked    Boolean  @default(false) @map("revoked")
+  expiresAt  DateTime @map("expires_at")
+  createdAt  DateTime @default(now()) @map("created_at")
 
-  @@index([token]) // Tăng tốc độ tìm kiếm token
+  @@index([token])
+  @@map("refresh_tokens")
 }
 
-// 2. Quản lý Reset Password Token (Quên mật khẩu)
 model PasswordReset {
   id         String   @id @default(uuid()) @db.Uuid
-  token      String   @unique @db.Text
-  email      String
-  userId     String   @db.Uuid
+  token      String   @unique @db.Text @map("token")
+  email      String   @map("email")
+  userId     String   @db.Uuid @map("user_id")
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  expiresAt  DateTime
-  createdAt  DateTime @default(now())
+  expiresAt  DateTime @map("expires_at")
+  createdAt  DateTime @default(now()) @map("created_at")
 
   @@index([token])
+  @@map("password_resets")
 }
 
-// 3. Quản lý Blacklist cho Access Token (Khi Logout)
 model TokenBlacklist {
   id         String   @id @default(uuid()) @db.Uuid
-  token      String   @unique @db.Text // Lưu nguyên chuỗi Access Token bị chặn
-  expiresAt  DateTime // Thời điểm mà token này thực sự hết hạn (để xóa rác sau này)
-  createdAt  DateTime @default(now())
+  token      String   @unique @db.Text @map("token")
+  expiresAt  DateTime @map("expires_at")
+
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
 
   @@index([token])
+  @@map("token_blacklists")
 }
+
+model MediaContainer {
+  id          String       @id @default(uuid()) @db.Uuid
+
+  ownerId     String       @db.Uuid @map("owner_id")
+  owner       User         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  expiresAt   DateTime?    @map("expires_at")
+
+  mediaFiles  MediaFile[]
+  post        Post?
+
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  @@map("media_containers")
+}
+
+enum MediaType {
+  VIDEO
+  IMAGE
+}
+
+enum MediaStatus {
+  IN_PROGRESS
+  READY
+  DISCARDED
+}
+
+model MediaFile {
+  id           String         @id @default(uuid()) @db.Uuid
+  containerId  String         @db.Uuid @map("container_id")
+  mediaType    MediaType      @map("media_type")
+  contentType  String         @map("content_type")
+  status       MediaStatus?   @default(IN_PROGRESS) @map("status")
+
+  url          String?        @map("url")
+
+  container    MediaContainer @relation(fields: [containerId], references: [id], onDelete: Cascade)
+
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("media_files")
+}
+
+model Post {
+  id               String   @id @default(uuid()) @db.Uuid
+  caption          String   @map("caption")
+  locationText     String?  @map("location_text")
+  locationLat      Float?   @map("location_lat")
+  locationLng      Float?   @map("location_lng")
+
+  ownerId          String   @db.Uuid @map("owner_id")
+  owner            User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  mediaContainerId String   @unique @db.Uuid @map("media_container_id")
+  mediaContainer   MediaContainer @relation(fields: [mediaContainerId], references: [id], onDelete: Cascade)
+
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@map("posts")
+}
+
+
 

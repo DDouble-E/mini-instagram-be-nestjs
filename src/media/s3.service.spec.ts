@@ -22,27 +22,25 @@ describe('S3Service Integration (Real AWS)', () => {
 
   it('should generate a REAL presigned URL', async () => {
     // Input giả định
-    const userId = 'user-integration-test';
+    const containerId = 'user-integration-test';
     const contentType = 'image/png';
-    const fileName = 'test-image.png';
+    const userId = 'integration-test-user34324';
+    const mediaFileId = 'integration-test-media-file';
 
     console.log('--- Đang gọi AWS S3 thật... ---');
 
     try {
-      const result = await service.getPresignedUrl(userId, contentType, fileName);
+      const result = await service.getPresignedUrl(userId, containerId, mediaFileId, contentType);
 
       // Log ra để bạn có thể copy link và test thử trên trình duyệt/Postman
       console.log('✅ Kết quả trả về từ AWS:');
       console.log('---------------------------------------------------');
-      console.log('Upload URL (PUT):', result.uploadUrl);
-      console.log('File URL (GET):', result.fileUrl);
-      console.log('Key:', result.fileKey);
-      console.log('---------------------------------------------------');
+      console.log('Upload URL (PUT):', result);
 
       // Kiểm tra đơn giản
-      expect(result.uploadUrl).toBeDefined();
-      expect(result.uploadUrl).toContain('amazonaws.com');
-      expect(result.uploadUrl).toContain('X-Amz-Signature'); // Chữ ký chứng tỏ AWS SDK đã ký thành công
+      expect(result).toBeDefined();
+      expect(result).toContain('amazonaws.com');
+      expect(result).toContain('X-Amz-Signature'); // Chữ ký chứng tỏ AWS SDK đã ký thành công
 
     } catch (error) {
       console.error('❌ Lỗi kết nối AWS:', error);

@@ -8,7 +8,7 @@ import { ConfigModule } from '@nestjs/config';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { join } from 'path';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
-import { S3Module } from './s3/s3.module';
+import { S3Module } from './media/media.module';
 
 @Module({
   imports: [

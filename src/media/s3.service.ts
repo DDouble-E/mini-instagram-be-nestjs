@@ -29,14 +29,13 @@ export class S3Service {
         return `https://${this.bucket}.s3.${this.region}.amazonaws.com/${key}`;
     }
 
-    async getPresignedUrl(userId: string, contentType: string, fileName: string) {
-        const key = `original/${userId}/${uuid()}-${fileName}`;
+    async getPresignedUrl(userId: string, containerId: string, mediaFileId: string, contentType: string) {
+        const extension = contentType.split('/')[1];
+        const key = `images/original/${userId}/${containerId}/${mediaFileId}.${extension}`;
         const uploadUrl = await this.createPresignedUrl(key, contentType);
-        return {
-            uploadUrl,
-            fileKey: key,
-            fileUrl: this.getPublicUrl(key),
-        };
+        const fileUrl = this.getPublicUrl(key);
+        return uploadUrl;
+
     }
 
     async createPresignedUrl(
