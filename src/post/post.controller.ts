@@ -28,4 +28,10 @@ export class PostController {
         this.logger.log(`Getting post detail for postId: ${postId}`);
         return this.postService.getPostDetailById(postId);
     }
+
+    @Get('/list')
+    async getPostList(@GetUser() user: any) {
+        this.logger.log(`Getting post list for userId: ${user.userId}`);
+        return this.postService.getPostList(user.userId);
+    }
 }

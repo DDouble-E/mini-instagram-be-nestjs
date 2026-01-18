@@ -69,4 +69,71 @@ export class PostService {
             })),
         }
     }
+
+    async getPostList(userId: string) {
+        this.logger.log(`Fetching post list for userId: ${userId}`);
+
+        const posts = await this.prismaService.post.findMany({
+            where: { ownerId: userId },
+            include: {
+                mediaContainer: {
+                    include: {
+                        mediaFiles: true,
+                    }
+                },
+                owner: {
+                    select: {
+                        username: true,
+                    }
+                }
+            }
+        });
+
+        return posts.map(post => ({
+            postId: post.id,
+            username: post.owner.username,
+            caption: post.caption,
+            locationText: post?.locationText,
+            locationLat: post?.locationLat,
+            locationLng: post?.locationLng,
+            publishedAt: post.updatedAt,
+            media: post.mediaContainer.mediaFiles.map(file => ({
+                url: file.url,
+                contentType: file.contentType,
+            })),
+        }));
+    }
+
+    async getUserPosts(userId: string) {
+        this.logger.log(`Fetching posts for userId: ${userId}`);
+        const posts = await this.prismaService.post.findMany({
+            where: { ownerId: userId },
+            include: {
+                mediaContainer: {
+                    include: {
+                        mediaFiles: true,
+                    }
+                },
+                owner: {
+                    select: {
+                        username: true,
+                    }
+                }
+            }
+        });
+
+        return posts.map(post => ({
+            postId: post.id,
+            username: post.owner.username,
+            caption: post.caption,
+            locationText: post?.locationText,
+            locationLat: post?.locationLat,
+            locationLng: post?.locationLng,
+            publishedAt: post.updatedAt,
+            media: post.mediaContainer.mediaFiles.map(file => ({
+                url: file.url,
+                contentType: file.contentType,
+            })),
+        }));
+    }
 }

@@ -7,6 +7,7 @@ import { Module } from '@nestjs/common';
 @Module({
     imports: [PrismaModule],
     providers: [PostService],
-    controllers: [PostController]
+    controllers: [PostController],
+    exports: [PostService],
 })
 export class PostModule { }
