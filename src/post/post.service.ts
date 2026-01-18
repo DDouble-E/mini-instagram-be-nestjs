@@ -25,7 +25,9 @@ export class PostService {
             },
         });
 
-        return post.id;
+        return {
+            postId: post.id
+        }
     }
 
     async getPostDetailById(postId: string) {
