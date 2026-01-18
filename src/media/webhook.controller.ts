@@ -44,7 +44,7 @@ export class WebhookController {
         await this.prismaService.mediaFile.update({
             where: { id: mediaFileId },
             data: {
-                url: original.url,
+                url: original,
                 status: 'READY',
             }
         });
