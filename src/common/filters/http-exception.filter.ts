@@ -21,8 +21,18 @@ export class HttpExceptionFilter implements ExceptionFilter {
     this.logger.error('Exception caught by HttpExceptionFilter:');
 
     this.logger.error(
-      `[${request.method}] ${request.url} - Status: ${status} - Error: ${JSON.stringify(message)}`
+      `[${request.method}] ${request.url} - Status: ${status} - Error: ${message instanceof Error
+        ? message.message
+        : typeof message === 'object'
+          ? JSON.stringify(message)
+          : message
+      }`,
     );
+
+    // optional: stack trace
+    if (exception instanceof Error) {
+      this.logger.error(exception.stack);
+    }
 
     response.status(status).json({
       success: false,
