@@ -11,4 +11,4 @@ import { MediaService } from './media.service';
   controllers: [WebhookController, MediaController],
   exports: [S3Service],
 })
-export class S3Module { }
+export class MediaModule { }

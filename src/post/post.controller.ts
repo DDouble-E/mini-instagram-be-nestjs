@@ -1,4 +1,4 @@
-import { Body, Controller, Logger, Param, Post } from "@nestjs/common";
+import { Body, Controller, Get, Logger, Param, Post } from "@nestjs/common";
 import { PublishPostDto } from "./dto/publish-post.dto";
 import { GetUser } from "src/auth/decorators/get-user.decorator";
 import { PostService } from "./post.service";
@@ -21,5 +21,11 @@ export class PostController {
         this.logger.log(`Publishing post with containerId: ${containerId}`);
         const { userId } = user;
         return this.postService.publish(containerId, userId, publishPostDto);
+    }
+
+    @Get('/:postId/detail')
+    async getPostDetailById(@Param('postId') postId: string) {
+        this.logger.log(`Getting post detail for postId: ${postId}`);
+        return this.postService.getPostDetailById(postId);
     }
 }
