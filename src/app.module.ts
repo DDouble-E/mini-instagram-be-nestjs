@@ -8,17 +8,20 @@ import { ConfigModule } from '@nestjs/config';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { join } from 'path';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
-import { S3Module } from './media/media.module';
+import { MediaModule } from './media/media.module';
+import { PostModule } from './post/post.module';
 
 @Module({
   imports: [
     UsersModule,
     AuthModule,
+
     PrismaModule,
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    S3Module
+    MediaModule,
+    PostModule,
   ],
   controllers: [AppController],
   providers: [AppService],
