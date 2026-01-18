@@ -30,7 +30,7 @@ describe('S3Service Integration (Real AWS)', () => {
     console.log('--- Đang gọi AWS S3 thật... ---');
 
     try {
-      const result = await service.getPresignedUrl(userId, containerId, mediaFileId, contentType);
+      const result = await service.getPresignedUrl(userId, containerId, mediaFileId, contentType, 'POST');
 
       // Log ra để bạn có thể copy link và test thử trên trình duyệt/Postman
       console.log('✅ Kết quả trả về từ AWS:');

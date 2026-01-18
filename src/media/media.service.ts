@@ -3,6 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "src/prisma/prisma.service";
 import { S3Service } from "./s3.service";
 import { v4 as uuidV4 } from 'uuid';
+import { UPLOAD_TYPE } from "src/common/constants/upload-type";
 
 
 @Injectable()
@@ -40,7 +41,7 @@ export class MediaService {
         const mediaFileId = mediaFile.id;
 
 
-        const uploadUrl = await this.s3Service.getPresignedUrl(userId, container.id, mediaFileId, mediaContentType);
+        const uploadUrl = await this.s3Service.getPresignedUrl(userId, container.id, mediaFileId, mediaContentType, UPLOAD_TYPE.POST);
 
         return {
             containerId: container.id,

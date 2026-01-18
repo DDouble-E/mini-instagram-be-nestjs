@@ -4,8 +4,12 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { v4 as uuid } from 'uuid';
 
+import { UploadType, UPLOAD_TYPE } from '../common/constants/upload-type';
+
+
 @Injectable()
 export class S3Service {
+
     private s3: S3Client;
     private readonly DEFAULT_EXPIRATION = 300; // 5 phút
     private readonly DEFAULT_FOLDER = 'original';
@@ -29,11 +33,21 @@ export class S3Service {
         return `https://${this.bucket}.s3.${this.region}.amazonaws.com/${key}`;
     }
 
-    async getPresignedUrl(userId: string, containerId: string, mediaFileId: string, contentType: string) {
+    async getPresignedUrl(userId: string, containerId: string, mediaFileId: string, contentType: string, uploadType: UploadType) {
         const extension = contentType.split('/')[1];
-        const key = `images/original/${userId}/${containerId}/${mediaFileId}.${extension}`;
-        const uploadUrl = await this.createPresignedUrl(key, contentType);
+        let key = '';
+        if (uploadType === UPLOAD_TYPE.AVATAR) {
+            const avatarId = uuid();
+            key = `images/avatars/original/${userId}/${avatarId}.${extension}`;
+        } else {
+            key = `images/posts/original/${containerId}/${mediaFileId}.${extension}`;
+        }
+
+        const finalKey = key;
+        const uploadUrl = await this.createPresignedUrl(finalKey, contentType);
         const fileUrl = this.getPublicUrl(key);
+
+
         return uploadUrl;
 
     }

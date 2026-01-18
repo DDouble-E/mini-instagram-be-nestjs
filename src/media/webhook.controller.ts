@@ -39,16 +39,27 @@ export class WebhookController {
 
         this.logger.log('Verified! Valid signature')
 
-        const { userId, containerId, mediaFileId, image: { url, contentType } } = body;
-        this.logger.log(`Processing mediaFileId: ${mediaFileId} for userId: ${userId}`);
-        await this.prismaService.mediaFile.update({
-            where: { id: mediaFileId },
-            data: {
-                url: url,
-                contentType: contentType,
-                status: 'READY',
-            }
-        });
+        const { type, ownerId, fileId, image: { url, contentType } } = body;
+        this.logger.log(`Processing ${type} with fileId: ${fileId} for ownerId : ${ownerId}`);
+
+        if (type === 'posts') {
+            await this.prismaService.mediaFile.update({
+                where: { id: fileId },
+                data: {
+                    url: url,
+                    contentType: contentType,
+                    status: 'READY',
+                }
+            });
+        }
+        else {
+            this.prismaService.user.update({
+                where: { id: ownerId },
+                data: {
+                    avatarUrl: url,
+                }
+            });
+        }
 
         return 'Image Webhook verified and processed';
     }

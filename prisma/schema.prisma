@@ -24,6 +24,7 @@ model User {
   dateOfBirth   DateTime? @map("date_of_birth")
   gender        String?  @map("gender")
   phoneNumber   String?  @map("phone_number")
+  avatarUrl     String?  @map("avatar_url")
 
   refreshTokens   RefreshToken[]
   passwordResets  PasswordReset[]

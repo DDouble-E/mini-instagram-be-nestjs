@@ -2,12 +2,16 @@ import { BadRequestException, ConflictException, Injectable, Logger, NotFoundExc
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
+import { S3Service } from 'src/media/s3.service';
 
 
 @Injectable()
 export class UsersService {
     private readonly logger = new Logger(UsersService.name);
-    constructor(private prisma: PrismaService) { }
+    constructor(
+        private prisma: PrismaService,
+        private readonly s3Service: S3Service,
+    ) { }
 
     async create(createUserDto: CreateUserDto) {
         this.logger.log(`Creating user with email: ${createUserDto.email}`);
@@ -68,4 +72,102 @@ export class UsersService {
         })
     }
 
+
+    async getUserProfile(userId: string) {
+        this.logger.log(`Fetching profile for user ID: ${userId}`);
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId },
+            select: {
+                id: true,
+                email: true,
+                biography: true,
+                dateOfBirth: true,
+                fullName: true,
+                gender: true,
+                phoneNumber: true,
+                username: true,
+                avatarUrl: true,
+            }
+        });
+
+        if (!user) {
+            this.logger.warn(`User with ID ${userId} not found`);
+            throw new NotFoundException('User not found');
+        }
+
+        return {
+            userId: user.id,
+            username: user.username,
+            email: user.email,
+            fullName: user.fullName,
+            avatarUrl: user.avatarUrl,
+            biography: user.biography,
+            dateOfBirth: user.dateOfBirth,
+            gender: user.gender,
+            phoneNumber: user.phoneNumber,
+        }
+
+    }
+
+    async updateUserProfile(userId: string, updateData: Partial<CreateUserDto>) {
+        this.logger.log(`Updating profile for user ID: ${userId}`);
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId },
+        });
+
+        if (!user) {
+            this.logger.warn(`User with ID ${userId} not found`);
+            throw new NotFoundException('User not found');
+        }
+
+        const updatedUser = await this.prisma.user.update({
+            where: { id: userId },
+            data: updateData,
+        });
+
+        return {
+            userId: updatedUser.id,
+            username: updatedUser.username,
+            email: updatedUser.email,
+            fullName: updatedUser.fullName,
+            biography: updatedUser.biography,
+            dateOfBirth: updatedUser.dateOfBirth,
+            gender: updatedUser.gender,
+            phoneNumber: updatedUser.phoneNumber,
+        }
+
+    }
+
+    async updateAvatarUrl(userId: string, avatarUrl: string) {
+        this.logger.log(`Updating avatar URL for user ID: ${userId}`);
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId },
+        });
+
+        if (!user) {
+            this.logger.warn(`User with ID ${userId} not found`);
+            throw new NotFoundException('User not found');
+        }
+
+        await this.prisma.user.update({
+            where: { id: userId },
+            data: { avatarUrl: avatarUrl },
+        });
+
+    }
+
+    async createAvatarUploadUrl(userId: string, contentType: string) {
+        this.logger.log(`Creating avatar upload URL for user ID: ${userId}`);
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId },
+        });
+
+        if (!user) {
+            this.logger.warn(`User with ID ${userId} not found`);
+            throw new NotFoundException('User not found');
+        }
+
+        const uploadUrl = this.s3Service.getPresignedUrl(userId, '', '', contentType, 'AVATAR');
+        return { uploadUrl };
+    }
 }
