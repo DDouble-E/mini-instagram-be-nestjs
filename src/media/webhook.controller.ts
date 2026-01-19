@@ -53,7 +53,7 @@ export class WebhookController {
             });
         }
         else {
-            this.prismaService.user.update({
+            await this.prismaService.user.update({
                 where: { id: ownerId },
                 data: {
                     avatarUrl: url,
