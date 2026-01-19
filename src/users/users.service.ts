@@ -167,7 +167,8 @@ export class UsersService {
             throw new NotFoundException('User not found');
         }
 
-        const uploadUrl = this.s3Service.getPresignedUrl(userId, '', '', contentType, 'AVATAR');
+        const uploadUrl = await this.s3Service.getPresignedUrl(userId, '', '', contentType, 'AVATAR');
+        this.logger.log('upload' + uploadUrl);
         return { uploadUrl };
     }
 }

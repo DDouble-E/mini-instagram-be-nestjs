@@ -28,7 +28,7 @@ export class UsersController {
 
 
   @Put('/me/update')
-  async updateUserProfile(@GetUser() user: any, updateData: Partial<CreateUserDto>) {
+  async updateUserProfile(@GetUser() user: any, @Body() updateData: Partial<CreateUserDto>) {
     this.logger.log(`Updating profile for userId: ${user.userId}`);
     return this.usersService.updateUserProfile(user.userId, updateData);
   }
